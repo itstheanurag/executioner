@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/itstheanurag/executioner/internal/config"
+
 	"github.com/itstheanurag/executioner/internal/server"
 	"github.com/rs/zerolog"
 )

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	config "github.com/itstheanurag/executioner/internal/config"
+	"github.com/itstheanurag/executioner/internal/database"
 	"github.com/rs/zerolog"
 )
 
@@ -14,12 +15,18 @@ type Server struct {
 	conf       *config.Config
 	logger     *zerolog.Logger
 	httpServer *http.Server
+	db         *database.Database
 }
 
 func New(
 	conf *config.Config,
 	logger *zerolog.Logger,
 ) (*Server, error) {
+
+	db, err := database.New(conf, logger)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create database: %w", err)
+	}
 
 	mux := http.NewServeMux()
 
@@ -41,6 +48,7 @@ func New(
 		conf:       conf,
 		logger:     logger,
 		httpServer: httpServer,
+		db:         db,
 	}
 
 	return s, nil
