@@ -15,7 +15,7 @@ import (
 type Config struct {
 	Primary Primary        `koanf:"primary" validate:"required"`
 	Server  ServerConfig   `koanf:"server" validate:"required"`
-	Db      DatabaseConfig `koanf:"db" validate:"required"`
+	Db      DatabaseConfig `koanf:"db"`
 }
 
 type Primary struct {
@@ -31,16 +31,17 @@ type ServerConfig struct {
 }
 
 type DatabaseConfig struct {
-	Host            string `koanf:"host" validate:"required"`
-	Port            int    `koanf:"port" validate:"required"`
-	User            string `koanf:"user" validate:"required"`
-	Name            string `koanf:"name" validate:"required"`
-	Password        string `koanf:"password" validate:"required"`
-	SSLMode         string `koanf:"ssl_mode" validate:"required"`
-	MaxOpenConns    int    `koanf:"max_open_conns" validate:"required"`
-	MaxIdleConns    int    `koanf:"max_idle_conns" validate:"required"`
-	ConnMaxLifetime int    `koanf:"conn_max_lifetime" validate:"required"`
-	ConnMaxIdleTime int    `koanf:"conn_max_idle_time" validate:"required"`
+	Enabled         bool   `koanf:"enabled"`
+	Host            string `koanf:"host"`
+	Port            int    `koanf:"port"`
+	User            string `koanf:"user"`
+	Name            string `koanf:"name"`
+	Password        string `koanf:"password"`
+	SSLMode         string `koanf:"ssl_mode"`
+	MaxOpenConns    int    `koanf:"max_open_conns"`
+	MaxIdleConns    int    `koanf:"max_idle_conns"`
+	ConnMaxLifetime int    `koanf:"conn_max_lifetime"`
+	ConnMaxIdleTime int    `koanf:"conn_max_idle_time"`
 }
 
 func LoadConfig() (*Config, error) {

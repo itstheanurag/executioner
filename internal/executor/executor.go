@@ -9,13 +9,13 @@ import (
 )
 
 type ExecutionResult struct {
-	Status    string
-	Stdout    string
-	Stderr    string
-	ExitCode  int
-	TimeMs    int64
-	MemoryKb  int64
-	ErrorType string
+	Status    string `json:"status"`
+	Stdout    string `json:"stdout"`
+	Stderr    string `json:"stderr"`
+	ExitCode  int    `json:"exit_code"`
+	TimeMs    int64  `json:"time_ms"`
+	MemoryKb  int64  `json:"memory_kb"`
+	ErrorType string `json:"error_type,omitempty"`
 }
 
 type Executor struct {

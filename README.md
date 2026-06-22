@@ -17,7 +17,7 @@ Executioner is a secure, high-performance code execution engine built in Go. It 
 
 - Go (1.21 or later)
 - Docker Engine
-- PostgreSQL (optional, for persistent storage)
+- PostgreSQL (optional — only needed when `EXECUTIONER_DB_ENABLED=true`)
 
 ## Getting Started
 
@@ -44,6 +44,12 @@ go run cmd/api/main.go
 
 The server will start on port `8080` by default. Required Docker images (like `python:3.11-slim`) will be pulled automatically if they are missing.
 
+### 4. Open the playground
+
+Visit [http://localhost:8080](http://localhost:8080) in your browser. The built-in frontend provides a code editor, stdin panel, and live output — no separate frontend server required.
+
+For local frontend development on a different port (e.g. `localhost:3000`), CORS is enabled via `EXECUTIONER_SERVER_CORS_ALLOWED_ORIGINS` in your `.env` file.
+
 ## API Usage
 
 ### Execute Code
@@ -67,6 +73,12 @@ curl -X POST http://localhost:8080/execute \
   -H "Content-Type: application/json" \
   -d '{"language": "python", "source_code": "print(42)"}'
 ```
+
+### List Languages
+
+**Endpoint**: `GET /languages`
+
+Returns the list of supported programming languages.
 
 ### Metrics
 

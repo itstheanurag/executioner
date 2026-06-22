@@ -15,6 +15,7 @@ import (
 	"github.com/itstheanurag/executioner/internal/queue"
 	"github.com/itstheanurag/executioner/internal/sandbox"
 	"github.com/itstheanurag/executioner/internal/worker"
+	"github.com/itstheanurag/executioner/web"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog"
 )
@@ -38,9 +39,15 @@ func New(
 	logger *zerolog.Logger,
 ) (*Server, error) {
 
-	db, err := database.New(conf, logger)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create database: %w", err)
+	var db *database.Database
+	if conf.Db.Enabled {
+		var err error
+		db, err = database.New(conf, logger)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create database: %w", err)
+		}
+	} else {
+		logger.Info().Msg("database disabled, running without persistence")
 	}
 
 	// Initialize components
@@ -57,7 +64,7 @@ func New(
 	rl := limiter.NewRateLimiter(100, 10, 20, 50)
 	rl.StartCleanup(5 * time.Minute)
 
-	handler := api.NewHandler(q)
+	handler := api.NewHandler(q, registry)
 
 	mux := http.NewServeMux()
 
@@ -70,12 +77,30 @@ func New(
 	// Prometheus metrics endpoint
 	mux.Handle("/metrics", promhttp.Handler())
 
-	// execution endpoint with rate limiting
+	// API endpoints with rate limiting
 	mux.HandleFunc("/execute", rl.Middleware(handler.Execute))
+	mux.HandleFunc("/languages", handler.ListLanguages)
+
+	// Playground frontend
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/" {
+			http.NotFound(w, r)
+			return
+		}
+		data, err := web.FS.ReadFile("index.html")
+		if err != nil {
+			http.Error(w, "frontend unavailable", http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Write(data)
+	})
+
+	rootHandler := api.CORSMiddleware(conf.Server.CorsAllowedOrigins)(mux)
 
 	httpServer := &http.Server{
 		Addr:         ":" + conf.Server.Port,
-		Handler:      mux,
+		Handler:      rootHandler,
 		ReadTimeout:  time.Duration(conf.Server.ReadTimeout) * time.Second,
 		WriteTimeout: time.Duration(conf.Server.WriteTimeout) * time.Second,
 		IdleTimeout:  time.Duration(conf.Server.IdleTimeout) * time.Second,

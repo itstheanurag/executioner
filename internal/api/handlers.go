@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/itstheanurag/executioner/internal/executor"
+	"github.com/itstheanurag/executioner/internal/languages"
 	"github.com/itstheanurag/executioner/internal/queue"
 )
 
@@ -18,14 +19,37 @@ type ExecutionRequest struct {
 	MemoryLimit int    `json:"memory_limit"` // in MB
 }
 
-type Handler struct {
-	queueManager *queue.Manager
+type LanguageResponse struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }
 
-func NewHandler(manager *queue.Manager) *Handler {
+type Handler struct {
+	queueManager *queue.Manager
+	registry     *languages.Registry
+}
+
+func NewHandler(manager *queue.Manager, registry *languages.Registry) *Handler {
 	return &Handler{
 		queueManager: manager,
+		registry:     registry,
 	}
+}
+
+func (h *Handler) ListLanguages(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	langs := h.registry.List()
+	resp := make([]LanguageResponse, 0, len(langs))
+	for _, l := range langs {
+		resp = append(resp, LanguageResponse{ID: l.ID, Name: l.Name})
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(resp)
 }
 
 func (h *Handler) Execute(w http.ResponseWriter, r *http.Request) {
